@@ -384,25 +384,30 @@ def start(playing=False):
         while True:
             try:
                 client = carla.Client(*settings.CARLA_HOSTS[process_no][:2])
+                time.sleep(2)
+                print('Getting map name...')
                 map_name = client.get_world().get_map().name
+                print('Default map name: '+ map_name)
                 if len(settings.CARLA_HOSTS[process_no]) == 2 or not settings.CARLA_HOSTS[process_no][2]:
                     break
                 if isinstance(settings.CARLA_HOSTS[process_no][2], int):
                     map_choice = random.choice([map.split('/')[-1] for map in client.get_available_maps()])
                 else:
                     map_choice = settings.CARLA_HOSTS[process_no][2]
+                print('Chosen map: '+ map_choice)
                 if map_name != map_choice:
-                    carla.Client(*settings.CARLA_HOSTS[process_no][:2]).load_world(map_choice)
+                    client.load_world(map_choice)
+                    print('Loading chosen map...')
                     while True:
                         try:
-                            while carla.Client(*settings.CARLA_HOSTS[process_no][:2]).get_world().get_map().name != map_choice:
+                            while client.get_world().get_map().name != map_choice:
                                 time.sleep(0.1)
                             break
                         except:
                             pass
                 break
             except Exception as e:
-                #print(str(e))
+                print(str(e))
                 time.sleep(0.1)
 
 
