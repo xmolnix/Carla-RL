@@ -107,6 +107,7 @@ class ARTDQNTrainer(ARTDQNAgent):
             current_states.append((np.array([[transition[0][1]] for transition in minibatch]) - 50) / 50)
         # We need to use previously saved graph here as this is going to be called from separate thread
         with self.graph.as_default():
+            backend.set_session(self.sess)
             current_qs_list = self.model.predict(current_states, settings.PREDICTION_BATCH_SIZE)
 
         # Get future states from minibatch, then query NN model for Q values
@@ -280,7 +281,9 @@ class ARTDQNTrainer(ARTDQNAgent):
                 }
 
                 # Save the model
-                self.model.save(f'checkpoint/{settings.MODEL_NAME}_{hparams["episode"]}.model')
+                with self.graph.as_default():
+                    backend.set_session(self.sess)
+                    self.model.save(f'checkpoint/{settings.MODEL_NAME}_{hparams["episode"]}.model')
 
                 with open('checkpoint/hparams_new.json', 'w', encoding='utf-8') as f:
                     json.dump(hparams, f)
@@ -346,12 +349,14 @@ def run(model_path, logdir, stop, weights, weights_iteration, episode, epsilon, 
 
     # Memory fraction
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=settings.TRAINER_MEMORY_FRACTION)
-    backend.set_session(tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)))
+    sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+    backend.set_session(sess)
 
     # Create trainer, run second init method and initialize weights so agents can load them
     trainer = ARTDQNTrainer(model_path)
     trainer.init2(stop, logdir, trainer_stats, episode, epsilon, discount, update_target_every, last_target_update, min_reward, agent_show_preview, save_checkpoint_every, seconds_per_episode, duration, optimizer, models, car_npcs)
     trainer.init_serialized_weights(weights, weights_iteration)
+    trainer.sess = sess
 
     trainer_stats[0] = TRAINER_STATE.waiting
 
