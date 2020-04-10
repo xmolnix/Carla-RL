@@ -511,8 +511,8 @@ class Weather(object):
 
     def tick(self, delta_seconds):
         delta_seconds += random.uniform(-0.1, 0.1)
-        self.sun.tick(delta_seconds)
-        self.storm.tick(delta_seconds)
+        #self.sun.tick(delta_seconds)
+        #self.storm.tick(delta_seconds)
         self.weather.cloudyness = self.storm.clouds
         self.weather.precipitation = self.storm.rain
         self.weather.precipitation_deposits = self.storm.puddles
